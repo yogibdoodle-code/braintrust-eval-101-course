@@ -1,4 +1,4 @@
-# Module 9: Online Scoring
+# Module 12: Online Scoring
 
 ## Assets
 
@@ -30,4 +30,4 @@ export OPENAI_API_KEY="your-openai-api-key"
 python generate_conversations.py
 ```
 
-The script generates 10 conversations across different complaint types (shipping delays, damaged products, wrong items, double charges, etc.) and logs them with the same span structure as the chat app from Module 6. Open the Logs tab to see online scores appear on each trace.
+The script generates 10 conversations across different complaint types (shipping delays, damaged products, wrong items, double charges, etc.) and logs them with the same span structure as the chat app from Module 10. Open the Logs tab to see online scores appear on each trace.

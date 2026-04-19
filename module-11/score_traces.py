@@ -4,11 +4,21 @@ from collections import defaultdict
 from autoevals import LLMClassifier
 
 BRAINTRUST_API_KEY = os.environ["BRAINTRUST_API_KEY"]
+PROJECT_NAME = "Customer Support Chatbot"
 
-# Set BRAINTRUST_PROJECT_ID to your project's ID, or replace the default below.
-# Find it via: curl https://api.braintrust.dev/v1/project?project_name=Customer+Support+Chatbot
-#   -H "Authorization: Bearer $BRAINTRUST_API_KEY"
-PROJECT_ID = os.environ.get("BRAINTRUST_PROJECT_ID", "YOUR_PROJECT_ID")
+
+def resolve_project_id(project_name):
+    """Look up a project's UUID by name. The REST API requires an ID, not a name."""
+    resp = requests.get(
+        "https://api.braintrust.dev/v1/project",
+        headers={"Authorization": f"Bearer {BRAINTRUST_API_KEY}"},
+        params={"project_name": project_name},
+    )
+    resp.raise_for_status()
+    objects = resp.json().get("objects", [])
+    if not objects:
+        raise ValueError(f"Project '{project_name}' not found.")
+    return objects[0]["id"]
 
 # Per-turn scorer: evaluates each individual assistant response in isolation.
 # Same Brand Alignment concept from Modules 3-4, now applied to logged turns.
@@ -39,18 +49,16 @@ brand_alignment = LLMClassifier(
 conversation_quality = LLMClassifier(
     name="Conversation Quality",
     prompt_template=(
-        "Evaluate this customer support conversation.\n\n"
+        "Did this customer support conversation successfully resolve the customer's issue?\n\n"
         "{{{input}}}\n\n"
-        "Rate the overall quality:\n"
-        "A - Resolved: The customer's issue was fully resolved. The agent was "
-        "consistent across all turns and didn't ask for the same information twice.\n"
-        "B - Partial: The issue was partially addressed, or resolved with unnecessary "
-        "back-and-forth or minor inconsistencies.\n"
-        "C - Unresolved: The issue was not resolved, or the agent contradicted itself "
-        "or gave incorrect information.\n\n"
-        "Answer A, B, or C."
+        "Answer Y if the issue was fully resolved — the agent addressed the problem, "
+        "provided concrete next steps, and didn't ask for the same information twice.\n"
+        "Answer N if the issue was not resolved, or if the conversation had significant "
+        "problems — the agent contradicted itself, asked for information already provided, "
+        "or ended without a clear resolution.\n\n"
+        "Answer Y or N."
     ),
-    choice_scores={"A": 1.0, "B": 0.5, "C": 0.0},
+    choice_scores={"Y": 1.0, "N": 0.0},
     use_cot=True,
 )
 
@@ -104,7 +112,8 @@ def write_scores(project_id, event_id, span_id, root_span_id, scores, metadata=N
 
 
 def main():
-    all_spans = fetch_all_spans(PROJECT_ID)
+    project_id = resolve_project_id(PROJECT_NAME)
+    all_spans = fetch_all_spans(project_id)
 
     # Group all spans by trace so we can process each conversation together.
     traces = defaultdict(list)
@@ -132,7 +141,7 @@ def main():
         for turn in turn_spans:
             result = brand_alignment(input=turn["input"], output=turn["output"])
             rationale = result.metadata.get("rationale", "") if result.metadata else ""
-            write_scores(PROJECT_ID, turn["id"], turn["span_id"], root_span_id,
+            write_scores(project_id, turn["id"], turn["span_id"], root_span_id,
                 {"Brand Alignment": result.score},
                 metadata={"brand_alignment_rationale": rationale})
             choice = result.metadata.get("choice", "?") if result.metadata else "?"
@@ -146,7 +155,7 @@ def main():
                 if formatted.strip():
                     result = conversation_quality(input=formatted, output="")
                     rationale = result.metadata.get("rationale", "") if result.metadata else ""
-                    write_scores(PROJECT_ID, root_span["id"], root_span["span_id"], root_span_id,
+                    write_scores(project_id, root_span["id"], root_span["span_id"], root_span_id,
                         {"Conversation Quality": result.score},
                         metadata={"conversation_quality_rationale": rationale})
                     choice = result.metadata.get("choice", "?") if result.metadata else "?"

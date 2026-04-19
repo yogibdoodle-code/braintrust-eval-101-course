@@ -15,7 +15,7 @@ SYSTEM_PROMPT = (
 # Toggle this to see the difference in how traces are grouped.
 # True:  entire conversation is one log entry with nested turn spans.
 # False: each turn is its own top-level log entry.
-GROUP_AS_CONVERSATION = True
+GROUP_AS_CONVERSATION = False
 
 @traced
 def chat(conversation_history):

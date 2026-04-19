@@ -1,8 +1,8 @@
-# Module 6: Building a Multi-Turn Chat App
+# Module 6: Build a Simple Eval in Code
 
 ## Assets
 
-- **`chat_app.py`** — Interactive CLI chat app instrumented with Braintrust logging. Every conversation turn is traced and logged.
+- **`eval_customer_support.py`** — Complete eval script that runs two customer support chatbot personalities (Polite vs Concise) and scores them for helpfulness and tone.
 - **`requirements.txt`** — Python dependencies.
 
 ## Setup
@@ -21,7 +21,7 @@ export OPENAI_API_KEY="your-openai-api-key"
 ## Run
 
 ```bash
-python chat_app.py
+python eval_customer_support.py
 ```
 
-Type customer support messages and chat with the bot. Type `quit` to exit. Every conversation turn is logged to the "Customer Support Chatbot" project in Braintrust.
+This will run two experiments ("Polite Personality" and "Concise Personality") and upload the results to the "Customer Support Chatbot" project in Braintrust. You can then compare them in the Braintrust UI.

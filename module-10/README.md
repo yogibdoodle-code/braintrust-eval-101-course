@@ -1,13 +1,9 @@
-# Module 9: Discovering Patterns with Topics
+# Module 10: Building a Multi-Turn Chat App
 
 ## Assets
 
-- **`generate_logs.py`** — Generates 200 single-turn customer support conversations across 5 topic areas (shipping delays, refund requests, product questions, account issues, order tracking). This meets the minimum threshold (200 traces) for Braintrust Topics to generate topic clusters. Uses `gpt-4o-mini` to keep costs low.
+- **`chat_app.py`** — Interactive CLI chat app instrumented with Braintrust logging. Every conversation turn is traced and logged.
 - **`requirements.txt`** — Python dependencies.
-
-## Prerequisites
-
-This module assumes you have a "Customer Support Chatbot" project in Braintrust.
 
 ## Setup
 
@@ -25,7 +21,7 @@ export OPENAI_API_KEY="your-openai-api-key"
 ## Run
 
 ```bash
-python generate_logs.py
+python chat_app.py
 ```
 
-The script logs 200 conversations (80 unique messages, cycled to 200 and shuffled). Once it finishes, go to **Topics** in your project to set up topic maps and generate topic clusters.
+Type customer support messages and chat with the bot. Type `quit` to exit. Every conversation turn is logged to the "Customer Support Chatbot" project in Braintrust.

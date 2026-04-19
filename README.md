@@ -4,17 +4,14 @@ This repo contains datasets, code, and other assets for each module of the Brain
 
 ## Modules
 
-- **01 — Why Evals Are Important** — No code assets
-- **02 — What Actually Is an Eval?** — No code assets
-- **03 — Build a Simple Eval in the Braintrust UI** — Dataset CSV
-- **04 — Build a Simple Eval in Code** — Python eval script
-- **05 — How to Read a Trace** — No code assets
-- **06 — Building a Multi-Turn Chat App** — Chat app with Braintrust logging
-- **07 — Analyzing Results** — No code assets (experiment comparisons, Loop, and MCP queries in the Braintrust UI)
-- **08 — Analyzing Multi-Turn Traces** — Batch script to score full conversations at the trace level
-- **09 — Online Scoring** — Conversation generator script + online scoring configuration in the Braintrust UI
-- **10 — Discovering Patterns with Topics** — Script to generate 200 production logs + Topics setup walkthrough
-- **11 — The Improvement Loop** — Baseline and fixed eval scripts to verify a prompt change resolves a regression
+- **03 — Build a Simple Eval in the Braintrust UI** — Dataset CSV, prompts, and scorer
+- **06 — Build a Simple Eval in Code** — Python eval script
+- **07 — Nondeterminism** — Eval with trial runs
+- **10 — Building a Multi-Turn Chat App** — Chat app with Braintrust logging
+- **11 — Analyzing Multi-Turn Traces** — Batch script to score full conversations at the trace level
+- **12 — Online Scoring** — Conversation generator script + online scoring configuration in the Braintrust UI
+- **13 — Analyzing Production Logs** — Script to generate production logs + Topics setup walkthrough
+- **14 — The Improvement Loop** — Baseline and fixed eval scripts to verify a prompt change resolves a regression
 
 ## Getting started
 

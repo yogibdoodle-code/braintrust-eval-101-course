@@ -8,10 +8,10 @@ Run this after configuring online scoring so you can watch scores appear in real
 import os
 import time
 from openai import OpenAI
-from braintrust import init_logger, traced, wrap_openai
+from braintrust import init_logger, traced
 
 logger = init_logger(project="Customer Support Chatbot")
-client = wrap_openai(OpenAI(api_key=os.environ.get("OPENAI_API_KEY")))
+client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
 
 SYSTEM_PROMPT = (
     "You are a helpful customer support agent for an e-commerce company. "

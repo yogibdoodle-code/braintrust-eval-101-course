@@ -1,10 +1,12 @@
 import os
+import braintrust
 from openai import OpenAI
 from autoevals import LLMClassifier
-from braintrust import Eval, wrap_openai
+from braintrust import Eval
 
-# --- Setup ---
-client = wrap_openai(OpenAI(api_key=os.environ.get("OPENAI_API_KEY")))
+# --- Setup: auto-instrumentation captures all OpenAI calls ---
+braintrust.init(project="Customer Support Chatbot")
+client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
 
 # --- Dataset ---
 dataset = [
@@ -65,7 +67,7 @@ def polite_task(input):
             },
             {"role": "user", "content": input},
         ],
-        temperature=1.0,
+        temperature=0,
     )
     return response.choices[0].message.content
 
@@ -85,7 +87,7 @@ def concise_task(input):
             },
             {"role": "user", "content": input},
         ],
-        temperature=1.0,
+        temperature=0,
     )
     return response.choices[0].message.content
 
@@ -96,7 +98,7 @@ Eval(
     data=lambda: dataset,
     task=polite_task,
     scores=[brand_alignment_scorer],
-    experiment_name="module_4_polite_persona",
+    experiment_name="module_6_polite_persona",
 )
 
 Eval(
@@ -104,5 +106,5 @@ Eval(
     data=lambda: dataset,
     task=concise_task,
     scores=[brand_alignment_scorer],
-    experiment_name="module_4_concise_persona",
+    experiment_name="module_6_concise_persona",
 )

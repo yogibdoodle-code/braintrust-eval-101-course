@@ -1,9 +1,16 @@
 import os
-from openai import OpenAI
-from braintrust import init_logger, traced, wrap_openai
+from braintrust import wrap_anthropic, traced, init_logger
+from anthropic import Anthropic
 
-logger = init_logger(project="Customer Support Chatbot")
-client = wrap_openai(OpenAI(api_key=os.environ.get("OPENAI_API_KEY")))
+from dotenv import load_dotenv
+load_dotenv()
+
+projectName = "Customer Support Chat Bot"
+# model = "claude-sonnet-5" # os.environ.get("CLAUDE_MODEL")
+model = os.environ.get("CLAUDE_MODEL")
+
+logger = init_logger(project=projectName)
+client = wrap_anthropic(Anthropic(api_key=os.environ.get("ANTHROPIC_API_KEY")))
 
 SYSTEM_PROMPT = (
     "You are a helpful customer support agent for an e-commerce company. "
@@ -15,22 +22,25 @@ SYSTEM_PROMPT = (
 # Toggle this to see the difference in how traces are grouped.
 # True:  entire conversation is one log entry with nested turn spans.
 # False: each turn is its own top-level log entry.
-GROUP_AS_CONVERSATION = False
+GROUP_AS_CONVERSATION = True
 
 @traced
 def chat(conversation_history):
-    response = client.chat.completions.create(
-        model="gpt-4o",
+    print(f"Conversation history: {conversation_history}")
+    response = client.messages.create(
+        model=model,
+        max_tokens=1024,
+        system=SYSTEM_PROMPT,
         messages=conversation_history,
-        temperature=1.0,
+        #output_config={"effort": "high"}
     )
-    return response.choices[0].message.content
+    return next(block.text for block in response.content if hasattr(block, 'text'))
 
 def main():
     print("Customer Support Chat (type 'quit' to exit)")
     print("-" * 45)
 
-    conversation_history = [{"role": "system", "content": SYSTEM_PROMPT}]
+    conversation_history = []
     turn_number = 0
 
     if GROUP_AS_CONVERSATION:

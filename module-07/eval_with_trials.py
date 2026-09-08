@@ -21,16 +21,11 @@ load_dotenv()
 # --- Setup: auto-instrumentation captures all Anthropic calls ---
 projectName = "Customer Support Chat Bot"
 braintrust.init(project=projectName)
-logger = braintrust.init_logger()
-print("Braintrust logger initialized.")
 
 anthropic_client = Anthropic(api_key=os.environ.get("ANTHROPIC_API_KEY"))
 client = wrap_anthropic(anthropic_client)
 
 model = "claude-sonnet-5" # os.environ.get("CLAUDE_MODEL")
-
-braintrust.auto_instrument()
-print("Braintrust auto-instrumentation enabled and wrapped with Claude API client.")
 
 dataset = [
     {"input": "Why did my package disappear after tracking showed it was delivered?"},
@@ -133,7 +128,7 @@ def concise_task(input):
     return next(block.text for block in response.content if hasattr(block, 'text'))
 
 
-# trial_count=3 runs each input 3 times and averages the scores.
+# trial_count=X runs each input X times and averages the scores.
 # This smooths out scorer variance and gives you a more stable number to trust.
 Eval(
     projectName,

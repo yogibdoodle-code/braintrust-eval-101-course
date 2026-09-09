@@ -7,11 +7,20 @@ Run this after configuring online scoring so you can watch scores appear in real
 """
 import os
 import time
-from openai import OpenAI
-from braintrust import init_logger, traced
+# from openai import OpenAI
 
-logger = init_logger(project="Customer Support Chatbot")
-client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
+from braintrust import init_logger, traced, wrap_anthropic
+from anthropic import Anthropic
+
+from dotenv import load_dotenv
+load_dotenv()
+
+projectName = "Customer Support Chat Bot"
+
+logger = init_logger(project=projectName)
+client = wrap_anthropic(Anthropic(api_key=os.environ.get("ANTHROPIC_API_KEY")))
+
+model = os.environ.get("CLAUDE_MODEL")
 
 SYSTEM_PROMPT = (
     "You are a helpful customer support agent for an e-commerce company. "
@@ -111,17 +120,19 @@ MULTI_TURN = [
 
 @traced
 def chat(conversation_history):
-    response = client.chat.completions.create(
-        model="gpt-4o",
-        messages=conversation_history,
-        temperature=1.0,
-    )
-    return response.choices[0].message.content
+    response = client.messages.create(
+            model=model,
+            max_tokens=1024,
+            messages=conversation_history,
+            system=SYSTEM_PROMPT,
+        )
+    return response.content[0].text
 
 
 def run_conversation(name, user_messages):
     """Run a single conversation and log it to Braintrust."""
-    conversation_history = [{"role": "system", "content": SYSTEM_PROMPT}]
+    # conversation_history = [{"role": "system", "content": SYSTEM_PROMPT}]
+    conversation_history = []
     turn_number = 0
 
     with logger.start_span(name="conversation") as conversation_span:

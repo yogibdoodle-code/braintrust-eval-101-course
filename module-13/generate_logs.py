@@ -26,12 +26,22 @@ Braintrust Topics provides three built-in topic maps:
 Uses gpt-4o-mini to keep costs low.
 """
 import os
+from pyexpat import model
 import random
-from openai import OpenAI
-from braintrust import init_logger, traced
+# from openai import OpenAI
+from braintrust import init_logger, traced, wrap_anthropic
+from anthropic import Anthropic
 
-logger = init_logger(project="Customer Support Chatbot")
-client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
+from dotenv import load_dotenv
+load_dotenv()
+
+projectName = "Customer Support Chat Bot"
+
+logger = init_logger(project=projectName)
+client = wrap_anthropic(Anthropic(api_key=os.environ.get("ANTHROPIC_API_KEY")))
+# client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
+
+model = os.environ.get("CLAUDE_MODEL")
 
 SYSTEM_PROMPT = (
     "You are a helpful customer support agent for an e-commerce company. "
@@ -379,13 +389,13 @@ TURN_WEIGHTS = [1] * 50 + [2] * 15 + [3] * 10 + [4] * 15 + [5] * 10
 
 @traced
 def chat(conversation_history):
-    response = client.chat.completions.create(
-        model="gpt-4o-mini",
-        messages=conversation_history,
-        temperature=1.0,
-    )
-    return response.choices[0].message.content
-
+    response = client.messages.create(
+            model=model,
+            max_tokens=1024,
+            messages=conversation_history,
+            system =SYSTEM_PROMPT
+        )
+    return response.content[0].text
 
 @traced
 def generate_followup(conversation_history):
@@ -395,20 +405,21 @@ def generate_followup(conversation_history):
         f"{'Customer' if m['role'] == 'user' else 'Agent'}: {m['content']}"
         for m in conversation_history if m["role"] != "system"
     )
-    response = client.chat.completions.create(
-        model="gpt-4o-mini",
+    response = client.messages.create(
+        model=model,
+        max_tokens=1024,
         messages=[
-            {"role": "system", "content": FOLLOWUP_SYSTEM_PROMPT},
             {"role": "user", "content": conv_text + "\n\nCustomer:"},
         ],
-        temperature=1.0,
+        system=FOLLOWUP_SYSTEM_PROMPT,
     )
-    return response.choices[0].message.content
+    return response.content[0].text
 
 
 def run_conversation(topic, user_message, num_turns, index, total):
     """Run a conversation with the specified number of turns."""
-    conversation_history = [{"role": "system", "content": SYSTEM_PROMPT}]
+    # conversation_history = [{"role": "system", "content": SYSTEM_PROMPT}]
+    conversation_history = []
 
     with logger.start_span(name="conversation") as conversation_span:
         for turn in range(1, num_turns + 1):
@@ -442,7 +453,7 @@ def run_conversation(topic, user_message, num_turns, index, total):
 def main():
     total = len(ALL_MESSAGES)
     print(f"Generating {total} conversations across {len(MESSAGES)} topics...")
-    print("(Using gpt-4o-mini to keep costs low)")
+    print(f"(Using {model} to keep costs low)")
     print("(~50% single-turn, ~50% multi-turn 2-5 turns)\n")
 
     # Shuffle so topics are interleaved, and assign turn counts.

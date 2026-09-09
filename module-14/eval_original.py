@@ -40,14 +40,7 @@ def task(input):
         max_tokens=500,
         system = SYSTEM_PROMPT,
     )
-    return response.content[0].text
-
-    response = client.messages.create(
-            model=model,
-            max_tokens=500,
-            messages=[{"role": "user", "content": prompt}]
-        )
-    
+    return response.content[0].text   
 
 Eval(
     "Customer Support Chatbot",

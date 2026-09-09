@@ -1,10 +1,17 @@
 import os
 import braintrust
-from openai import OpenAI
-from braintrust import Eval, init_function
+from braintrust import Eval, init_function, init_logger, wrap_anthropic
+from anthropic import Anthropic
 
-braintrust.init(project="Customer Support Chatbot")
-client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
+from dotenv import load_dotenv
+load_dotenv()
+
+BRAINTRUST_API_KEY = os.environ.get("BRAINTRUST_API_KEY")
+PROJECT_NAME = "Customer Support Chat Bot"
+model = os.environ.get("CLAUDE_MODEL")
+
+braintrust.init(project=PROJECT_NAME)
+client = wrap_anthropic(Anthropic(api_key=os.environ.get("ANTHROPIC_API_KEY")))
 
 SYSTEM_PROMPT = (
     "You are a helpful customer support agent for an e-commerce company. "
@@ -15,8 +22,8 @@ SYSTEM_PROMPT = (
 
 # References the Brand Alignment scorer defined in the Braintrust UI.
 brand_alignment_scorer = init_function(
-    project_name="Customer Support Chatbot",
-    slug="brand-alignment-99e2",
+    project_name=PROJECT_NAME,
+    slug="brand-alignment-5133",
 )
 
 def task(input):
@@ -25,19 +32,26 @@ def task(input):
         user_msg = next((m["content"] for m in input if m["role"] == "user"), "")
     else:
         user_msg = input
-    response = client.chat.completions.create(
-        model="gpt-4o-mini",
+    response = client.messages.create(
+        model=model,
         messages=[
-            {"role": "system", "content": SYSTEM_PROMPT},
             {"role": "user", "content": user_msg},
         ],
-        temperature=0,
+        max_tokens=500,
+        system = SYSTEM_PROMPT,
     )
-    return response.choices[0].message.content
+    return response.content[0].text
+
+    response = client.messages.create(
+            model=model,
+            max_tokens=500,
+            messages=[{"role": "user", "content": prompt}]
+        )
+    
 
 Eval(
     "Customer Support Chatbot",
-    data=lambda: braintrust.init_dataset(project="Customer Support Chatbot", name="Account And Login Issues"),
+    data=lambda: braintrust.init_dataset(project=PROJECT_NAME, name="Account And Login Issues"),
     task=task,
     scores=[brand_alignment_scorer],
     max_concurrency=1,
